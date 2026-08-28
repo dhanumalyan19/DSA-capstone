@@ -15,6 +15,7 @@ The "Decompress" tab. Two supported data sources:
      verification is simply not claimed rather than faked.
 """
 
+import os
 import time
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -30,7 +31,14 @@ class DecompressionView(ttk.Frame):
         self.state = state
         self.on_pipeline_updated = on_pipeline_updated
         self._original_for_verification = None
+        self._build_vars()
         self._build_ui()
+
+    def _build_vars(self):
+        self.source_type_var = tk.StringVar(value="None")
+        self.payload_size_var = tk.StringVar(value="0")
+        self.recovered_count_var = tk.StringVar(value="0")
+        self.verify_status_var = tk.StringVar(value="Pending")
 
     def _build_ui(self):
         pad = {"padx": 12, "pady": 8}
@@ -52,6 +60,17 @@ class DecompressionView(ttk.Frame):
         self.source_label = ttk.Label(source_frame, text="No compressed data loaded.",
                                        style="PanelMuted.TLabel")
         self.source_label.pack(anchor="w", padx=10, pady=(0, 10))
+
+        source_stats = ttk.Frame(source_frame, style="Panel.TFrame")
+        source_stats.pack(fill="x", padx=10, pady=(0, 12))
+        for label, var in (
+            ("Source", self.source_type_var),
+            ("Payload", self.payload_size_var),
+            ("Recovered", self.recovered_count_var),
+            ("Verify", self.verify_status_var),
+        ):
+            card = theme.metric_card(source_stats, label, var)
+            card.pack(side="left", fill="x", expand=True, padx=(0, 8))
 
         action_frame = ttk.Frame(self, style="Panel.TFrame")
         action_frame.pack(fill="x", **pad)
@@ -105,6 +124,10 @@ class DecompressionView(ttk.Frame):
                  f"({len(self.state.package.bitstring)} bits, "
                  f"{len(self.state.frequencies)} unique symbols)."
         )
+        self.source_type_var.set("Memory")
+        self.payload_size_var.set(f"{len(self.state.package.packed_bytes)} bytes")
+        self.recovered_count_var.set("0")
+        self.verify_status_var.set("Pending")
         self.btn_decode.configure(state="normal")
         self.verify_var.set("")
 
@@ -141,9 +164,13 @@ class DecompressionView(ttk.Frame):
             self._original_for_verification = None
 
         self.source_label.configure(
-            text=f"Source: file '{path}' ({len(packed_bytes)} bytes payload, "
+            text=f"Source: file '{os.path.basename(path)}' ({len(packed_bytes)} bytes payload, "
                  f"{len(frequencies)} unique symbols, {original_count} original symbols)."
         )
+        self.source_type_var.set("File")
+        self.payload_size_var.set(f"{len(packed_bytes)} bytes")
+        self.recovered_count_var.set("0")
+        self.verify_status_var.set("Pending")
         self.btn_decode.configure(state="normal")
         self.verify_var.set("")
 
@@ -176,18 +203,22 @@ class DecompressionView(ttk.Frame):
         self.recovered_text.insert("1.0", decoded)
         self.recovered_text.configure(state="disabled")
         self.btn_save_recovered.configure(state="normal")
+        self.recovered_count_var.set(f"{len(decoded)} chars")
 
         if self._original_for_verification is not None:
             passed = (decoded == self._original_for_verification)
             self.state.verification_result = passed
             if passed:
                 self.verify_var.set("Lossless Verification: PASSED")
+                self.verify_status_var.set("Passed")
                 self.verify_label.configure(style="Good.TLabel")
             else:
                 self.verify_var.set("Lossless Verification: FAILED")
+                self.verify_status_var.set("Failed")
                 self.verify_label.configure(style="Bad.TLabel")
         else:
             self.state.verification_result = None
+            self.verify_status_var.set("N/A")
             self.verify_var.set(
                 "Lossless Verification: N/A (original text not available for comparison "
                 f"-- decoded {len(decoded)} symbol(s) successfully in "

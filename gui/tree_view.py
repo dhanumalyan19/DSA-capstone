@@ -38,8 +38,13 @@ class TreeView(ttk.Frame):
         header = ttk.Frame(self, style="Panel.TFrame")
         header.pack(fill="x", padx=12, pady=(12, 6))
         ttk.Label(header, text="Huffman Tree Visualization", style="PanelHeading.TLabel").pack(
-            anchor="w", padx=10, pady=10
+            anchor="w", padx=10, pady=(10, 4)
         )
+        ttk.Label(
+            header,
+            text="Leaves show symbols; internal nodes show combined frequencies.",
+            style="PanelMuted.TLabel",
+        ).pack(anchor="w", padx=10, pady=(0, 10))
 
         self.info_label = ttk.Label(
             self, text="Run the pipeline on the Compress tab to see the tree here.",
@@ -54,7 +59,8 @@ class TreeView(ttk.Frame):
         v_scroll = ttk.Scrollbar(canvas_frame, orient="vertical")
 
         self.canvas = tk.Canvas(
-            canvas_frame, bg=theme.BG_PANEL, highlightthickness=0,
+            canvas_frame, bg=theme.BG_INPUT, highlightthickness=1,
+            highlightbackground=theme.BORDER,
             xscrollcommand=h_scroll.set, yscrollcommand=v_scroll.set,
         )
         h_scroll.configure(command=self.canvas.xview)

@@ -27,7 +27,13 @@ class CompressionView(ttk.Frame):
         super().__init__(parent, style="TFrame")
         self.state = state
         self.on_pipeline_updated = on_pipeline_updated
+        self._build_vars()
         self._build_ui()
+
+    def _build_vars(self):
+        self.char_count_var = tk.StringVar(value="0")
+        self.unique_count_var = tk.StringVar(value="0")
+        self.pipeline_status_var = tk.StringVar(value="Ready")
 
     # ------------------------------------------------------------------
     def _build_ui(self):
@@ -57,6 +63,16 @@ class CompressionView(ttk.Frame):
         ttk.Button(btn_row, text="Clear", command=self._clear_input).pack(side="left", padx=(8, 0))
         self.file_label = ttk.Label(btn_row, text="No file loaded", style="PanelMuted.TLabel")
         self.file_label.pack(side="left", padx=(12, 0))
+
+        stats_row = ttk.Frame(input_frame, style="Panel.TFrame")
+        stats_row.pack(fill="x", padx=10, pady=(0, 12))
+        for label, var in (
+            ("Characters", self.char_count_var),
+            ("Distinct Now", self.unique_count_var),
+            ("Pipeline", self.pipeline_status_var),
+        ):
+            card = theme.metric_card(stats_row, label, var)
+            card.pack(side="left", fill="x", expand=True, padx=(0, 8))
 
         # --- Pipeline buttons -------------------------------------------
         pipeline_frame = ttk.Frame(self, style="Panel.TFrame")
@@ -106,6 +122,21 @@ class CompressionView(ttk.Frame):
     def _on_text_modified(self, event=None):
         # tk.Text fires <<Modified>> repeatedly; reset the flag each time.
         self.text_widget.edit_modified(False)
+        if self.state.frequencies or self.state.tree_root or self.state.codes or self.state.package:
+            self.state.reset_compress_side()
+            self._reset_pipeline_buttons()
+            self._set_summary("")
+            self.on_pipeline_updated()
+        self._refresh_input_stats()
+
+    def _refresh_input_stats(self):
+        text = self._current_text()
+        self.char_count_var.set(str(len(text)))
+        self.unique_count_var.set(str(len(set(text))) if text else "0")
+        if text and self.btn_build["state"] == "disabled":
+            self.pipeline_status_var.set("Ready to analyze")
+        elif not text:
+            self.pipeline_status_var.set("Ready")
 
     def _open_file(self):
         path = filedialog.askopenfilename(
@@ -132,19 +163,23 @@ class CompressionView(ttk.Frame):
         self.state.source_file_path = path
         self.file_label.configure(text=f"Loaded: {os.path.basename(path)}")
         self._reset_pipeline_buttons()
+        self._refresh_input_stats()
 
     def _clear_input(self):
         self.text_widget.delete("1.0", "end")
-        self.state.source_file_path = None
+        self.state.reset_compress_side()
         self.file_label.configure(text="No file loaded")
         self._reset_pipeline_buttons()
+        self._refresh_input_stats()
         self._set_summary("")
+        self.on_pipeline_updated()
 
     def _reset_pipeline_buttons(self):
         self.btn_build.configure(state="disabled")
         self.btn_codes.configure(state="disabled")
         self.btn_compress.configure(state="disabled")
         self.btn_save.configure(state="disabled")
+        self.pipeline_status_var.set("Ready to analyze")
 
     def _current_text(self):
         return self.text_widget.get("1.0", "end-1c")
@@ -182,6 +217,7 @@ class CompressionView(ttk.Frame):
         self.btn_codes.configure(state="disabled")
         self.btn_compress.configure(state="disabled")
         self.btn_save.configure(state="disabled")
+        self.pipeline_status_var.set("Analyzed")
         self.on_pipeline_updated()
 
     # ------------------------------------------------------------------
@@ -198,6 +234,7 @@ class CompressionView(ttk.Frame):
         )
         self._set_summary(summary)
         self.btn_codes.configure(state="normal")
+        self.pipeline_status_var.set("Tree built")
         self.on_pipeline_updated()
 
     # ------------------------------------------------------------------
@@ -225,6 +262,7 @@ class CompressionView(ttk.Frame):
 
         self._set_summary(summary)
         self.btn_compress.configure(state="normal")
+        self.pipeline_status_var.set("Codes ready")
         self.on_pipeline_updated()
 
     # ------------------------------------------------------------------
@@ -263,6 +301,7 @@ class CompressionView(ttk.Frame):
         )
         self._set_summary(summary)
         self.btn_save.configure(state="normal")
+        self.pipeline_status_var.set("Compressed")
         self.on_pipeline_updated()
 
     # ------------------------------------------------------------------

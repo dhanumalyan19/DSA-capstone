@@ -27,28 +27,54 @@ class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Huffman Compression Studio")
-        self.geometry("1100x750")
-        self.minsize(900, 600)
+        self.geometry("1180x780")
+        self.minsize(960, 640)
 
         theme.apply_theme(self)
 
         self.state_obj = AppState()
+        self._build_header_vars()
 
         self._build_header()
         self._build_tabs()
+        self.on_state_changed()
+
+    def _build_header_vars(self):
+        self.source_status_var = tk.StringVar(value="No input")
+        self.codes_status_var = tk.StringVar(value="0 codes")
+        self.result_status_var = tk.StringVar(value="Not compressed")
+        self.verify_status_var = tk.StringVar(value="Not decoded")
 
     def _build_header(self):
         header = ttk.Frame(self, style="TFrame")
-        header.pack(fill="x", padx=20, pady=(16, 4))
-        ttk.Label(header, text="Huffman Compression Studio", style="Title.TLabel").pack(anchor="w")
+        header.pack(fill="x", padx=22, pady=(18, 6))
+
+        title_row = ttk.Frame(header, style="TFrame")
+        title_row.pack(fill="x")
+
+        title_block = ttk.Frame(title_row, style="TFrame")
+        title_block.pack(side="left", fill="x", expand=True)
+        ttk.Label(title_block, text="Huffman Compression Studio",
+                  style="Title.TLabel").pack(anchor="w")
         ttk.Label(
-            header, text="Data Structures & Algorithms  --  Huffman Encoding",
+            title_block, text="Data Structures & Algorithms - Huffman Encoding",
             style="Subtitle.TLabel",
         ).pack(anchor="w", pady=(2, 0))
 
+        cards = ttk.Frame(header, style="TFrame")
+        cards.pack(fill="x", pady=(16, 0))
+        for label, var in (
+            ("Source", self.source_status_var),
+            ("Codes", self.codes_status_var),
+            ("Compression", self.result_status_var),
+            ("Verification", self.verify_status_var),
+        ):
+            card = theme.metric_card(cards, label, var)
+            card.pack(side="left", fill="x", expand=True, padx=(0, 10))
+
     def _build_tabs(self):
         notebook = ttk.Frame(self, style="TFrame")
-        notebook.pack(fill="both", expand=True, padx=16, pady=12)
+        notebook.pack(fill="both", expand=True, padx=18, pady=(8, 16))
 
         self.notebook = ttk.Notebook(notebook)
         self.notebook.pack(fill="both", expand=True)
@@ -74,11 +100,39 @@ class MainWindow(tk.Tk):
         for view in (self.compression_view, self.decompression_view, self.tree_view,
                      self.code_table_view, self.analysis_view, self.algorithm_view):
             self.state_obj.register(view)
+        self.state_obj.register(self)
 
     def _on_pipeline_updated(self):
         """Called by CompressionView/DecompressionView after any real state
         change, so every other tab refreshes from the same shared state."""
         self.state_obj.notify()
+
+    def on_state_changed(self):
+        source_len = len(self.state_obj.source_text or "")
+        unique_count = len(self.state_obj.frequencies or {})
+        code_count = len(self.state_obj.codes or {})
+
+        if source_len:
+            self.source_status_var.set(f"{source_len} chars, {unique_count} unique")
+        else:
+            self.source_status_var.set("No input")
+
+        self.codes_status_var.set(f"{code_count} code{'s' if code_count != 1 else ''}")
+
+        if self.state_obj.package:
+            bits = self.state_obj.package.theoretical_bit_length
+            self.result_status_var.set(f"{bits} bits ready")
+        else:
+            self.result_status_var.set("Not compressed")
+
+        if self.state_obj.verification_result is True:
+            self.verify_status_var.set("Passed")
+        elif self.state_obj.verification_result is False:
+            self.verify_status_var.set("Failed")
+        elif self.state_obj.decoded_text is not None:
+            self.verify_status_var.set("Decoded")
+        else:
+            self.verify_status_var.set("Not decoded")
 
 
 def run():

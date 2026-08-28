@@ -1,8 +1,8 @@
 # Huffman Compression Studio
 
 A Data Structures & Algorithms capstone project: **Data Compression with
-Huffman Encoding**, implemented as a complete, from-scratch, real-time
-desktop GUI application in Python.
+Huffman Encoding**, implemented as a complete, from-scratch compression
+engine with a modern browser-based interface in Python.
 
 ---
 
@@ -12,10 +12,10 @@ Demonstrate the full theory and practice of Huffman Encoding -- frequency
 analysis, priority queues (min-heaps), greedy binary tree construction,
 recursive prefix-code generation, lossless encoding/decoding, and
 information-theoretic analysis (Shannon entropy, compression ratio) --
-inside a polished, genuinely functional desktop application, not a
-toy CLI script or a slide deck of pseudocode.
+inside a polished, genuinely functional web application, not a toy CLI
+script or a slide deck of pseudocode.
 
-Every button in the GUI performs a real, working action against a
+Every action in the website performs a real, working operation against a
 real, from-scratch algorithm implementation. Nothing is faked or
 hard-coded.
 
@@ -23,6 +23,8 @@ hard-coded.
 
 ## 2. Features
 
+- **Browser dashboard** -- run the full Huffman workflow from a modern
+  Flask-powered website.
 - **Text or file input** -- type text directly, or open any UTF-8 `.txt` file.
 - **Frequency analysis** with a live frequency/probability table.
 - **From-scratch binary min-heap** (`core/heap.py`) -- not a wrapper
@@ -40,9 +42,8 @@ hard-coded.
 - **Automatic Lossless Verification** -- `decoded == original` is
   checked programmatically and displayed as PASSED/FAILED, never
   simply assumed.
-- **Interactive Huffman Tree visualization** on a live Tkinter Canvas
-  (not a static image), redrawn from the real tree object every time
-  you rebuild it.
+- **Interactive Huffman Tree visualization** rendered in the browser
+  from the real tree object every time you run the pipeline.
 - **Code Table tab** -- Character / Frequency / Probability / Huffman
   Code / Code Length, sorted by frequency.
 - **Compression Analysis Dashboard** -- original size, theoretical
@@ -57,9 +58,9 @@ hard-coded.
   implemented Run-Length Encoding, Shannon-Fano coding, and LZW on the
   same input. Arithmetic Coding is explicitly marked "not implemented"
   rather than faked.
-- **Robust error handling** -- empty input, invalid/non-UTF-8 files,
-  missing files, corrupted `.huff` data, and decoding without a
-  frequency table all show a friendly message box instead of crashing.
+- **Robust error handling** -- empty input, invalid files, corrupted
+  `.huff` data, and decoding without a frequency table all show friendly
+  browser messages instead of crashing.
 
 ---
 
@@ -134,17 +135,14 @@ packages, as required.
 
 ## 5. Installation
 
-Requires Python 3.8+ (developed and tested on Python 3.12). Uses only
-the standard library.
+Requires Python 3.8+ (developed and tested on Python 3.12).
 
 ```bash
 pip install -r requirements.txt
 ```
 
-(There is nothing to actually install -- `tkinter` ships with standard
-CPython installers on Windows and macOS. On Linux, if `tkinter` is
-missing, install it via your package manager first, e.g.:
-`sudo apt install python3-tk` on Debian/Ubuntu.)
+This installs Flask for the browser interface. The Huffman algorithm
+itself remains implemented from scratch in `core/`.
 
 ## 6. How to Run
 
@@ -152,11 +150,17 @@ missing, install it via your package manager first, e.g.:
 python main.py
 ```
 
-This launches the desktop GUI, "Huffman Compression Studio."
+This launches the Flask website, "Huffman Compression Studio."
+
+Open this URL in your browser:
+
+```bash
+http://127.0.0.1:5000
+```
 
 ---
 
-## 7. How to Use the GUI
+## 7. How to Use the Website
 
 1. **Compress tab**
    - Type text into the box, or click "Open Text File..." to load a

@@ -7,6 +7,7 @@ input (core/huffman.build_from_text's `steps`, extended with encoding
 steps), with Next/Previous controls, exactly per project spec section 8.
 """
 
+import tkinter as tk
 from tkinter import ttk
 
 from gui import theme
@@ -18,6 +19,7 @@ class AlgorithmView(ttk.Frame):
         self.state = state
         self._steps = []
         self._index = 0
+        self.progress_var = tk.DoubleVar(value=0)
         self._build_ui()
 
     def _build_ui(self):
@@ -31,6 +33,11 @@ class AlgorithmView(ttk.Frame):
 
         self.step_label = ttk.Label(body, text="Step 0 of 0", style="PanelMuted.TLabel")
         self.step_label.pack(anchor="w", padx=10, pady=(10, 0))
+
+        self.progress = ttk.Progressbar(
+            body, variable=self.progress_var, maximum=100, mode="determinate"
+        )
+        self.progress.pack(fill="x", padx=10, pady=(8, 0))
 
         self.step_text = theme.styled_text_widget(body, height=16, width=100)
         self.step_text.pack(fill="both", expand=True, padx=10, pady=10)
@@ -59,6 +66,7 @@ class AlgorithmView(ttk.Frame):
     def _render(self):
         total = len(self._steps)
         self.step_label.configure(text=f"Step {self._index + 1} of {total}")
+        self.progress_var.set(((self._index + 1) / total) * 100 if total else 0)
         self.step_text.configure(state="normal")
         self.step_text.delete("1.0", "end")
         self.step_text.insert("1.0", self._steps[self._index])

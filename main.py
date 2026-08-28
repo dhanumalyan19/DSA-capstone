@@ -2,13 +2,13 @@
 """
 main.py
 -------
-Entry point for the Huffman Compression Studio desktop application.
+Entry point for the Huffman Compression Studio web application.
 
 Run with:
     python main.py
 """
 
-from gui.main_window import run
+from web.app import run
 
 if __name__ == "__main__":
     run()

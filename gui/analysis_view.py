@@ -11,6 +11,7 @@ against whatever the Compress tab actually produced -- nothing here is
 hard-coded.
 """
 
+import tkinter as tk
 from tkinter import ttk
 
 from core.metrics import full_analysis, explain_entropy_gap
@@ -22,13 +23,36 @@ class AnalysisView(ttk.Frame):
     def __init__(self, parent, state):
         super().__init__(parent, style="TFrame")
         self.state = state
+        self._build_vars()
         self._build_ui()
+
+    def _build_vars(self):
+        self.original_size_var = tk.StringVar(value="-")
+        self.stored_size_var = tk.StringVar(value="-")
+        self.ratio_var = tk.StringVar(value="-")
+        self.savings_var = tk.StringVar(value="-")
 
     def _build_ui(self):
         header = ttk.Frame(self, style="Panel.TFrame")
         header.pack(fill="x", padx=12, pady=(12, 6))
         ttk.Label(header, text="Compression Analysis Dashboard",
-                  style="PanelHeading.TLabel").pack(anchor="w", padx=10, pady=10)
+                  style="PanelHeading.TLabel").pack(anchor="w", padx=10, pady=(10, 4))
+        ttk.Label(
+            header,
+            text="Live metrics from the most recent compression run.",
+            style="PanelMuted.TLabel",
+        ).pack(anchor="w", padx=10, pady=(0, 8))
+
+        stats = ttk.Frame(header, style="Panel.TFrame")
+        stats.pack(fill="x", padx=10, pady=(0, 12))
+        for label, var in (
+            ("Original", self.original_size_var),
+            ("Stored", self.stored_size_var),
+            ("Ratio", self.ratio_var),
+            ("Savings", self.savings_var),
+        ):
+            card = theme.metric_card(stats, label, var)
+            card.pack(side="left", fill="x", expand=True, padx=(0, 8))
 
         btn_row = ttk.Frame(self, style="TFrame")
         btn_row.pack(fill="x", padx=12, pady=(0, 6))
@@ -50,6 +74,10 @@ class AnalysisView(ttk.Frame):
 
     def on_state_changed(self):
         if not self.state.package or not self.state.frequencies:
+            self.original_size_var.set("-")
+            self.stored_size_var.set("-")
+            self.ratio_var.set("-")
+            self.savings_var.set("-")
             self._set_text(
                 "Run the full pipeline on the Compress tab (Analyze -> Build Tree -> "
                 "Generate Codes -> Compress) to populate the analysis dashboard."
@@ -66,6 +94,10 @@ class AnalysisView(ttk.Frame):
             decoding_seconds=self.state.decoding_seconds,
         )
         explanation = explain_entropy_gap(analysis)
+        self.original_size_var.set(f"{analysis['original_size_bytes']} bytes")
+        self.stored_size_var.set(f"{analysis['stored_file_bytes']} bytes")
+        self.ratio_var.set(f"{analysis['compression_ratio_stored']:.3f}:1")
+        self.savings_var.set(f"{analysis['space_savings_stored_pct']:.2f}%")
 
         lines = []
         lines.append("SIZE METRICS")

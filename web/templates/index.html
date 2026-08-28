@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Huffman Compression Studio</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <section class="welcome-screen" aria-labelledby="welcomeTitle">
+    <canvas id="heroCanvas" class="hero-canvas" aria-hidden="true"></canvas>
+    <div class="hero-noise" aria-hidden="true"></div>
+    <nav class="hero-nav" aria-label="Welcome navigation">
+      <span>DSA Capstone</span>
+      <button id="skipToStudioBtn" type="button">Open Studio</button>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">Lossless Compression Visual Lab</p>
+      <h1 id="welcomeTitle">Huffman Compression Studio</h1>
+      <p class="hero-description">
+        Explore frequency analysis, greedy tree construction, prefix codes, and
+        file recovery through a motion-rich browser interface powered by a
+        from-scratch Huffman engine.
+      </p>
+      <div class="hero-actions">
+        <button id="enterStudioBtn" class="primary-button hero-button" type="button">Enter Studio</button>
+        <span>Compress, inspect, decode, and verify in one flow.</span>
+      </div>
+    </div>
+    <div class="hero-proof">
+      <article>
+        <span>Core</span>
+        <strong>From Scratch</strong>
+      </article>
+      <article>
+        <span>Format</span>
+        <strong>.huff</strong>
+      </article>
+      <article>
+        <span>Verify</span>
+        <strong>Lossless</strong>
+      </article>
+    </div>
+    <div class="scroll-cue" aria-hidden="true">
+      <i></i>
+      <span>Main workspace below</span>
+    </div>
+  </section>
+
+  <div id="studioApp" class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Data Structures and Algorithms</p>
+        <h1>Huffman Compression Studio</h1>
+      </div>
+      <canvas id="signalCanvas" class="signal-canvas" aria-hidden="true"></canvas>
+      <div class="status-grid">
+        <article class="metric">
+          <span>Source</span>
+          <strong id="sourceMetric">No input</strong>
+        </article>
+        <article class="metric">
+          <span>Codes</span>
+          <strong id="codesMetric">0 codes</strong>
+        </article>
+        <article class="metric">
+          <span>Stored</span>
+          <strong id="storedMetric">-</strong>
+        </article>
+        <article class="metric">
+          <span>Verification</span>
+          <strong id="verifyMetric">Not decoded</strong>
+        </article>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel composer">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Input</p>
+            <h2>Compress Text</h2>
+          </div>
+          <div class="toolbar">
+            <select id="sampleSelect" class="sample-select" aria-label="Load demo sample">
+              <option value="">Demo samples</option>
+            </select>
+            <button id="loadSampleBtn" class="ghost-button" type="button">Load Sample</button>
+            <label class="file-button">
+              Open .txt
+              <input id="textFileInput" type="file" accept=".txt,text/plain">
+            </label>
+            <button id="clearBtn" class="ghost-button" type="button">Clear</button>
+          </div>
+        </div>
+
+        <textarea id="sourceText" spellcheck="false" placeholder="Paste or type text here"></textarea>
+
+        <div class="pipeline-rail" aria-label="Huffman pipeline status">
+          <div class="rail-track">
+            <i id="pipelineProgress"></i>
+          </div>
+          <ol>
+            <li class="active">Input</li>
+            <li>Frequency</li>
+            <li>Tree</li>
+            <li>Codes</li>
+            <li>Output</li>
+          </ol>
+        </div>
+
+        <div class="action-row">
+          <button id="runBtn" class="primary-button" type="button">Run Huffman Pipeline</button>
+          <button id="downloadCompressedBtn" class="ghost-button" type="button" disabled>Download .huff</button>
+          <button id="exportReportBtn" class="ghost-button" type="button" disabled>Export Report</button>
+          <label class="file-button">
+            Load .huff
+            <input id="huffFileInput" type="file" accept=".huff,application/octet-stream">
+          </label>
+          <button id="decodeLastBtn" class="ghost-button" type="button" disabled>Decode Last Result</button>
+        </div>
+
+        <div id="message" class="message" role="status"></div>
+      </section>
+
+      <section class="panel recovered-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Decode</p>
+            <h2>Recovered Text</h2>
+          </div>
+          <button id="downloadTextBtn" class="ghost-button" type="button" disabled>Download .txt</button>
+        </div>
+        <textarea id="decodedText" spellcheck="false" readonly placeholder="Decoded output appears here"></textarea>
+      </section>
+
+      <nav class="tabs" aria-label="Project views">
+        <button class="tab active" data-tab="overview" type="button">Overview</button>
+        <button class="tab" data-tab="tree" type="button">Tree</button>
+        <button class="tab" data-tab="codes" type="button">Code Table</button>
+        <button class="tab" data-tab="analysis" type="button">Analysis</button>
+        <button class="tab" data-tab="algorithm" type="button">Algorithm</button>
+      </nav>
+
+      <section id="overview" class="tab-panel active">
+        <div class="metrics-row">
+          <article class="metric large">
+            <span>Original</span>
+            <strong id="originalSize">-</strong>
+            <small>UTF-8 bytes</small>
+          </article>
+          <article class="metric large">
+            <span>Bitstream</span>
+            <strong id="bitstreamSize">-</strong>
+            <small>Theoretical bits</small>
+          </article>
+          <article class="metric large">
+            <span>Ratio</span>
+            <strong id="ratioValue">-</strong>
+            <small>Original / stored</small>
+          </article>
+          <article class="metric large">
+            <span>Savings</span>
+            <strong id="savingsValue">-</strong>
+            <small>Stored file</small>
+          </article>
+        </div>
+
+        <div class="split-grid">
+          <article class="panel inset">
+            <div class="panel-heading compact">
+              <h2>Before / After Size</h2>
+            </div>
+            <div id="sizeChart" class="size-chart"></div>
+          </article>
+          <article class="panel inset">
+            <div class="panel-heading compact">
+              <h2>Bitstream Preview</h2>
+            </div>
+            <pre id="bitPreview" class="bit-preview">Run the pipeline to generate compressed bits.</pre>
+          </article>
+          <article class="panel inset">
+            <div class="panel-heading compact">
+              <h2>Symbol Frequencies</h2>
+            </div>
+            <div id="frequencyList" class="frequency-list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="tree" class="tab-panel">
+        <article class="panel full-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Visualization</p>
+              <h2>Huffman Tree</h2>
+            </div>
+            <div class="tree-tools">
+              <button id="zoomOutBtn" class="icon-button" type="button" title="Zoom out">-</button>
+              <button id="zoomResetBtn" class="icon-button" type="button" title="Reset tree view">Reset</button>
+              <button id="zoomInBtn" class="icon-button" type="button" title="Zoom in">+</button>
+              <span class="legend"><i class="leaf-dot"></i>Leaf <i class="node-dot"></i>Internal</span>
+            </div>
+          </div>
+          <div class="tree-wrap">
+            <svg id="treeSvg" role="img" aria-label="Huffman tree visualization"></svg>
+          </div>
+        </article>
+      </section>
+
+      <section id="codes" class="tab-panel">
+        <article class="panel full-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Prefix Codes</p>
+              <h2>Code Table</h2>
+            </div>
+            <input id="codeSearch" class="search-input" type="search" placeholder="Search symbol or code">
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Frequency</th>
+                  <th>Probability</th>
+                  <th>Code</th>
+                  <th>Length</th>
+                </tr>
+              </thead>
+              <tbody id="codeTableBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section id="analysis" class="tab-panel">
+        <div class="split-grid">
+          <article class="panel inset">
+            <div class="panel-heading compact">
+              <h2>Compression Analysis</h2>
+            </div>
+            <dl id="analysisList" class="analysis-list"></dl>
+            <p id="entropyExplanation" class="quiet-text"></p>
+          </article>
+          <article class="panel inset">
+            <div class="panel-heading compact">
+              <h2>Algorithm Comparison</h2>
+            </div>
+            <div id="comparisonChart" class="comparison-chart"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="algorithm" class="tab-panel">
+        <article class="panel full-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Replay</p>
+              <h2>Algorithm Steps</h2>
+            </div>
+            <div class="toolbar">
+              <button id="prevStepBtn" class="ghost-button" type="button">Previous</button>
+              <button id="nextStepBtn" class="primary-button" type="button">Next</button>
+            </div>
+          </div>
+          <div class="step-meter">
+            <span id="stepCounter">Step 0 of 0</span>
+            <div><i id="stepProgress"></i></div>
+          </div>
+          <pre id="stepText" class="step-text">Run the pipeline to review the exact heap and tree operations.</pre>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
