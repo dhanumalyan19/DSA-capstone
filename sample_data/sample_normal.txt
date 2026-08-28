@@ -1,0 +1,6 @@
+The quick brown fox jumps over the lazy dog. This sentence contains
+a good mix of common English letters and is often used to test fonts
+and text processing tools because it uses every letter of the
+alphabet at least once. Huffman coding will assign shorter codes to
+frequently used letters like 'e', 't', and 'o', and longer codes to
+rarer letters like 'q', 'x', and 'z'.

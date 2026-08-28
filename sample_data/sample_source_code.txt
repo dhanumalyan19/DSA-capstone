@@ -1,0 +1,11 @@
+def build_huffman_tree(frequencies):
+    """Build a Huffman tree from a frequency dictionary."""
+    heap = MinHeap()
+    for symbol, freq in frequencies.items():
+        heap.push(HuffmanNode(symbol, freq))
+    while len(heap) > 1:
+        left = heap.pop_min()
+        right = heap.pop_min()
+        merged = HuffmanNode(None, left.frequency + right.frequency, left, right)
+        heap.push(merged)
+    return heap.pop_min()
